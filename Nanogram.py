@@ -48,9 +48,7 @@ def create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid):
     mapping_to_str = {}
     mapping_to_int = {}
     cont = 1
-    # for i in range(1,length(proposicoes_linhas + 1)):
-    #     mapping_to_int[f"x_{}"] = var_counter
-    #     mapping_to_str[var_counter] = f"x_{var_counter}"
+   
     for p in proposicoes_grid:
         mapping_to_str[p] = cont
         mapping_to_int[cont] = p
@@ -65,5 +63,5 @@ def create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid):
         cont += 1
     print(mapping_to_str, mapping_to_int)
 
+# teste
 create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid)
-
