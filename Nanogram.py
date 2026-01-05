@@ -34,11 +34,10 @@ def gerar_proposicoes(SETTINGS):
         for c in range(1, quant_colunas+1):
             prop_grid.append(f"G_{l}_{c}")
 
-    print ("Regras colunas: ", prop_colunas)
-    print(" ")
-    print("Regras linhas: ", prop_linhas)
-    print(" ")
-    print("Regras grid: ", prop_grid)
+    return prop_linhas, prop_colunas, prop_grid
 
-#Chamada da função para imprimir as proposições
-gerar_proposicoes(SETTINGS)
+#Teste
+proposicoes_linhas, proposicoes_colunas, proposicoes_grid = gerar_proposicoes(SETTINGS)
+print("Proposições linhas: ", proposicoes_linhas)
+print("Proposições colunas: ", proposicoes_colunas)
+print("Proposições grid: ", proposicoes_grid)
