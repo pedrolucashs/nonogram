@@ -39,10 +39,11 @@ def gerar_proposicoes(SETTINGS):
 
 #Teste
 proposicoes_linhas, proposicoes_colunas, proposicoes_grid = gerar_proposicoes(SETTINGS)
+"""""
 print("Proposições linhas: ", proposicoes_linhas)
 print("Proposições colunas: ", proposicoes_colunas)
 print("Proposições grid: ", proposicoes_grid)
-
+"""
 
 def create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid):
     mapping_to_str = {}
@@ -61,7 +62,9 @@ def create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid):
         mapping_to_str[p] = cont
         mapping_to_int[cont] = p
         cont += 1
-    print(mapping_to_str, mapping_to_int)
+    return mapping_to_str, mapping_to_int
 
-# teste
-create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid)
+map_str_to_int, map_int_to_str = create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid)
+
+
+
