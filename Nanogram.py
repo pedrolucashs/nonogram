@@ -1,5 +1,6 @@
 from pysat.solvers import Glucose3
 from SETTINGS import SETTINGS
+from itertools import combinations
 
 #Não é uma regra de resolução do Nanogram, é uma função que gera as regras das linhas, colunas e o grid
 def gerar_proposicoes(SETTINGS):
@@ -37,9 +38,10 @@ def gerar_proposicoes(SETTINGS):
     return prop_linhas, prop_colunas, prop_grid
 
 
-#Teste
 proposicoes_linhas, proposicoes_colunas, proposicoes_grid = gerar_proposicoes(SETTINGS)
-"""""
+
+"""
+#Teste
 print("Proposições linhas: ", proposicoes_linhas)
 print("Proposições colunas: ", proposicoes_colunas)
 print("Proposições grid: ", proposicoes_grid)
@@ -66,5 +68,58 @@ def create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid):
 
 map_str_to_int, map_int_to_str = create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid)
 
+def regra_unicidade(map_str_to_int):
+    prop_colunas = {}
+    prop_colunas_str = {}
+    prop_linhas = {}
+    prop_linhas_str = {}
+    clausulas = []
 
+    for prop_str, prop_int in map_str_to_int.items():
+        if prop_str.startswith("C_"):
+            coluna, c, r, b, pos = prop_str.split("_")
+            chave = (int(c), int(r), int(b))
+            if chave not in prop_colunas:
+                prop_colunas[chave] = []
+                prop_colunas_str[chave] = []
+            prop_colunas[chave].append(prop_int)
+            prop_colunas_str[chave].append(prop_str)
+        elif prop_str.startswith("L_"):
+            linha, l, r, b, pos = prop_str.split("_")
+            chave = (int(l), int(r), int(b))
+            if chave not in prop_linhas:
+                prop_linhas[chave] = []
+                prop_linhas_str[chave] = []
+            prop_linhas[chave].append(prop_int)
+            prop_linhas_str[chave].append(prop_str)
+    for lista_posicoes in prop_colunas.values():
+        for c1, c2 in combinations(lista_posicoes, 2):
+            clausulas.append([-c1, -c2])
+    for lista_posicoes in prop_linhas.values():
+        for c1, c2 in combinations(lista_posicoes, 2):
+            clausulas.append([-c1, -c2])
+    return clausulas, prop_colunas, prop_linhas, prop_colunas_str, prop_linhas_str
+
+clausulas, prop_colunas, prop_linhas, p_col_str, p_lin_str  = regra_unicidade(map_str_to_int)
+
+#Adiciona as cláusulas no solver, quando for adicionar as demais cláusulas das outras regras, uso a variável 's'
+s = Glucose3()
+for c in clausulas:
+    s.add_clause(c)
+
+""""
+#Teste
+for m, i in map_str_to_int.items():
+    print(f"Mapping str {m} to int {i}")
+print("")
+print("Regras por bloco das colunas: ", prop_colunas)
+print("")
+print("Regras por blocos dad linhas: ", prop_linhas)
+print("")
+print("Claúsulas: ", clausulas)
+print("")
+print("Regras str do bloco da coluna: ", p_col_str)
+print("")
+print("Regras str do bloco da linha: ", p_lin_str)
+"""
 
