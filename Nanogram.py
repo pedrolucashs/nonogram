@@ -123,3 +123,4 @@ print("")
 print("Regras str do bloco da linha: ", p_lin_str)
 """
 
+
