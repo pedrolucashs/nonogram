@@ -114,7 +114,7 @@ for m, i in map_str_to_int.items():
 print("")
 print("Regras por bloco das colunas: ", prop_colunas)
 print("")
-print("Regras por blocos dad linhas: ", prop_linhas)
+print("Regras por blocos das linhas: ", prop_linhas)
 print("")
 print("Claúsulas: ", clausulas)
 print("")
@@ -123,3 +123,91 @@ print("")
 print("Regras str do bloco da linha: ", p_lin_str)
 """
 
+def regra_continuidade(map_str_to_int, SETTINGS):
+    regras_colunas = SETTINGS["example"]["rules"]["columns"]
+    regras_linhas = SETTINGS["example"]["rules"]["rows"]
+    quant_colunas = SETTINGS["example"]["size"]["column"]
+    quant_linhas = SETTINGS["example"]["size"]["row"]
+    prop_colunas = {}
+    prop_colunas_str = {}
+    prop_linhas = {}
+    prop_linhas_str = {}
+    clausulas = []
+
+    for prop_str, prop_int in map_str_to_int.items():
+        if prop_str.startswith("C_"):
+            coluna, c, r, b, pos = prop_str.split("_")
+            chave = (int(c), int(r), int(b))
+            if chave not in prop_colunas:
+                prop_colunas[chave] = []
+                prop_colunas_str[chave] = []
+            prop_colunas[chave].append((int(pos), prop_int))
+            prop_colunas_str[chave].append((int(pos), prop_str))
+        elif prop_str.startswith("L_"):
+            linha, l, r, b, pos = prop_str.split("_")
+            chave = (int(l), int(r), int(b))
+            if chave not in prop_linhas:
+                prop_linhas[chave] = []
+                prop_linhas_str[chave] = []
+            prop_linhas[chave].append((int(pos), prop_int))
+            prop_linhas_str[chave].append((int(pos), prop_str))
+
+    for (c, r, b), lista_prop in prop_colunas.items():
+        if b != 1:
+            continue
+        tam_regra = regras_colunas[c][r-1]
+        if tam_regra <= 1:
+            continue
+        for pos, prop in lista_prop:
+            if (tam_regra + pos - 1) > quant_linhas:
+                clausulas.append([-prop])
+                continue
+            for cont in range (1, tam_regra):
+                bloco_sucessor = b + cont
+                posic_sucessora = pos + cont
+                chave_sucessora = (c, r, bloco_sucessor)           
+                if chave_sucessora in prop_colunas:
+                    for prox_pos, prox_prop in prop_colunas[chave_sucessora]:
+                        if posic_sucessora == prox_pos:
+                            clausulas.append([-prop, prox_prop])
+                            break
+
+    for (l, r, b), lista_prop in prop_linhas.items():
+        if b != 1:
+            continue
+        tam_regra = regras_linhas[l][r-1]
+        if tam_regra <= 1:
+            continue
+        for pos, prop in lista_prop:
+            if (tam_regra + pos - 1) > quant_colunas:
+                clausulas.append([-prop])
+                continue
+            for cont in range (1, tam_regra):
+                bloco_sucessor = b + cont
+                posic_sucessora = pos + cont
+                chave_sucessora = (l, r, bloco_sucessor)           
+                if chave_sucessora in prop_linhas:
+                    for prox_pos, prox_prop in prop_linhas[chave_sucessora]:
+                        if posic_sucessora == prox_pos:
+                            clausulas.append([-prop, prox_prop])
+                            break
+
+    return prop_colunas, prop_linhas, prop_colunas_str, prop_linhas_str, clausulas
+
+p_col, p_lin, p_c_s, p_l_s, c = regra_continuidade(map_str_to_int, SETTINGS)
+
+#Teste
+'''
+for m, i in map_str_to_int.items():
+    print(f"Mapping str {m} to int {i}")
+print("")
+print("Regras por bloco das colunas: ", p_col)
+print("")
+print("Regras por blocos das linhas: ", p_lin)
+print("")
+print("Regras str do bloco da coluna: ", p_c_s)
+print("")
+print("Regras str do bloco da linha: ", p_l_s)
+print("")
+print("Clausulas: ", c)
+'''
