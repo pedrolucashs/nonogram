@@ -73,7 +73,7 @@ def regra_unicidade(map_str_to_int):
     prop_colunas_str = {}
     prop_linhas = {}
     prop_linhas_str = {}
-    clausulas = []
+    clausulas1 = []
 
     for prop_str, prop_int in map_str_to_int.items():
         if prop_str.startswith("C_"):
@@ -94,11 +94,11 @@ def regra_unicidade(map_str_to_int):
             prop_linhas_str[chave].append(prop_str)
     for lista_posicoes in prop_colunas.values():
         for c1, c2 in combinations(lista_posicoes, 2):
-            clausulas.append([-c1, -c2])
+            clausulas1.append([-c1, -c2])
     for lista_posicoes in prop_linhas.values():
         for c1, c2 in combinations(lista_posicoes, 2):
-            clausulas.append([-c1, -c2])
-    return clausulas, prop_colunas, prop_linhas, prop_colunas_str, prop_linhas_str
+            clausulas1.append([-c1, -c2])
+    return clausulas1, prop_colunas, prop_linhas, prop_colunas_str, prop_linhas_str
 
 clausulas, prop_colunas, prop_linhas, p_col_str, p_lin_str  = regra_unicidade(map_str_to_int)
 
@@ -132,7 +132,7 @@ def regra_continuidade(map_str_to_int, SETTINGS):
     prop_colunas_str = {}
     prop_linhas = {}
     prop_linhas_str = {}
-    clausulas = []
+    clausulas2 = []
 
     for prop_str, prop_int in map_str_to_int.items():
         if prop_str.startswith("C_"):
@@ -160,7 +160,7 @@ def regra_continuidade(map_str_to_int, SETTINGS):
             continue
         for pos, prop in lista_prop:
             if (tam_regra + pos - 1) > quant_linhas:
-                clausulas.append([-prop])
+                clausulas2.append([-prop])
                 continue
             for cont in range (1, tam_regra):
                 bloco_sucessor = b + cont
@@ -169,7 +169,7 @@ def regra_continuidade(map_str_to_int, SETTINGS):
                 if chave_sucessora in prop_colunas:
                     for prox_pos, prox_prop in prop_colunas[chave_sucessora]:
                         if posic_sucessora == prox_pos:
-                            clausulas.append([-prop, prox_prop])
+                            clausulas2.append([-prop, prox_prop])
                             break
 
     for (l, r, b), lista_prop in prop_linhas.items():
@@ -180,7 +180,7 @@ def regra_continuidade(map_str_to_int, SETTINGS):
             continue
         for pos, prop in lista_prop:
             if (tam_regra + pos - 1) > quant_colunas:
-                clausulas.append([-prop])
+                clausulas2.append([-prop])
                 continue
             for cont in range (1, tam_regra):
                 bloco_sucessor = b + cont
@@ -189,10 +189,10 @@ def regra_continuidade(map_str_to_int, SETTINGS):
                 if chave_sucessora in prop_linhas:
                     for prox_pos, prox_prop in prop_linhas[chave_sucessora]:
                         if posic_sucessora == prox_pos:
-                            clausulas.append([-prop, prox_prop])
+                            clausulas2.append([-prop, prox_prop])
                             break
 
-    return prop_colunas, prop_linhas, prop_colunas_str, prop_linhas_str, clausulas
+    return prop_colunas, prop_linhas, prop_colunas_str, prop_linhas_str, clausulas2
 
 p_col, p_lin, p_c_s, p_l_s, c = regra_continuidade(map_str_to_int, SETTINGS)
 
@@ -210,4 +210,47 @@ print("")
 print("Regras str do bloco da linha: ", p_l_s)
 print("")
 print("Clausulas: ", c)
+
+'''
+
+def regra_quadrado_verdadeiro(p_col, p_lin):
+    dict_col = {}
+    dict_lin = {}
+    clausulas6 = []
+    
+    for chave, itens in p_col.items():
+        for tupla in itens:
+            item2 = tupla[1]
+            if not chave in dict_col:
+                dict_col[chave] = []
+            dict_col[chave].append(item2)
+    for chave, itens in p_lin.items():
+        for tupla in itens:
+            item2 = tupla[1]
+            if not chave in dict_lin:
+                dict_lin[chave] = []
+            dict_lin[chave].append(item2)
+    for itens in dict_col.values():
+        clausulas6.append(itens)
+    for itens in dict_lin.values():
+        clausulas6.append(itens)
+    
+    return dict_col, dict_lin, clausulas6
+
+c, l, clau = regra_quadrado_verdadeiro(p_col, p_lin)
+
+#Teste
+'''
+print("Regras str do bloco da coluna: ", p_c_s)
+print("")
+print("Regras str do bloco da linha: ", p_l_s)
+print("")
+print("Prop colunas: ", c)
+print("")
+print("Prop linhas: ", l)
+print("")
+print("Claúsulas: ", clau)
+print("")
+for p, i in map_str_to_int.items():
+    print(f"{p} - {i}")
 '''
