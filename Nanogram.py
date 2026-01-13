@@ -171,3 +171,7 @@ def regra_ordem_e_espacamento(map_str_to_int, quant_linhas, quant_colunas, regra
 
     return clausulas_ordem
 
+clausulas_ordem = regra_ordem_e_espacamento(map_str_to_int, SETTINGS["example"]["size"]["row"], SETTINGS["example"]["size"]["column"], SETTINGS["example"]["rules"]["rows"], SETTINGS["example"]["rules"]["columns"])
+s = Glucose3()
+for c in clausulas_uni + clausulas_ordem:
+    s.add_clause(c)
