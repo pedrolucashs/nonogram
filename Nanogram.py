@@ -123,6 +123,79 @@ print("")
 print("Regras str do bloco da linha: ", p_lin_str)
 """
 
+def regra_continuidade(map_str_to_int, SETTINGS):
+    regras_colunas = SETTINGS["example"]["rules"]["columns"]
+    regras_linhas = SETTINGS["example"]["rules"]["rows"]
+    quant_colunas = SETTINGS["example"]["size"]["column"]
+    quant_linhas = SETTINGS["example"]["size"]["row"]
+    prop_colunas = {}
+    prop_colunas_str = {}
+    prop_linhas = {}
+    prop_linhas_str = {}
+    clausulas2 = []
+
+    for prop_str, prop_int in map_str_to_int.items():
+        if prop_str.startswith("C_"):
+            coluna, c, r, b, pos = prop_str.split("_")
+            chave = (int(c), int(r), int(b))
+            if chave not in prop_colunas:
+                prop_colunas[chave] = []
+                prop_colunas_str[chave] = []
+            prop_colunas[chave].append((int(pos), prop_int))
+            prop_colunas_str[chave].append((int(pos), prop_str))
+        elif prop_str.startswith("L_"):
+            linha, l, r, b, pos = prop_str.split("_")
+            chave = (int(l), int(r), int(b))
+            if chave not in prop_linhas:
+                prop_linhas[chave] = []
+                prop_linhas_str[chave] = []
+            prop_linhas[chave].append((int(pos), prop_int))
+            prop_linhas_str[chave].append((int(pos), prop_str))
+
+    for (c, r, b), lista_prop in prop_colunas.items():
+        if b != 1:
+            continue
+        tam_regra = regras_colunas[c][r-1]
+        if tam_regra <= 1:
+            continue
+        for pos, prop in lista_prop:
+            if (tam_regra + pos - 1) > quant_linhas:
+                clausulas2.append([-prop])
+                continue
+            for cont in range (1, tam_regra):
+                bloco_sucessor = b + cont
+                posic_sucessora = pos + cont
+                chave_sucessora = (c, r, bloco_sucessor)           
+                if chave_sucessora in prop_colunas:
+                    for prox_pos, prox_prop in prop_colunas[chave_sucessora]:
+                        if posic_sucessora == prox_pos:
+                            clausulas2.append([-prop, prox_prop])
+                            break
+
+    for (l, r, b), lista_prop in prop_linhas.items():
+        if b != 1:
+            continue
+        tam_regra = regras_linhas[l][r-1]
+        if tam_regra <= 1:
+            continue
+        for pos, prop in lista_prop:
+            if (tam_regra + pos - 1) > quant_colunas:
+                clausulas2.append([-prop])
+                continue
+            for cont in range (1, tam_regra):
+                bloco_sucessor = b + cont
+                posic_sucessora = pos + cont
+                chave_sucessora = (l, r, bloco_sucessor)           
+                if chave_sucessora in prop_linhas:
+                    for prox_pos, prox_prop in prop_linhas[chave_sucessora]:
+                        if posic_sucessora == prox_pos:
+                            clausulas2.append([-prop, prox_prop])
+                            break
+
+    return prop_colunas, prop_linhas, prop_colunas_str, prop_linhas_str, clausulas2
+
+p_col, p_lin, p_c_s, p_l_s, c = regra_continuidade(map_str_to_int, SETTINGS)
+
 
 def regra_ordem_e_espacamento(map_str_to_int, quant_linhas, quant_colunas, regras_linhas, regras_colunas):
     clausulas_ordem = []
@@ -175,3 +248,31 @@ clausulas_ordem = regra_ordem_e_espacamento(map_str_to_int, SETTINGS["example"][
 s = Glucose3()
 for c in clausulas + clausulas_ordem:
     s.add_clause(c)
+
+#print(clausulas_ordem)
+
+def regra_quadrado_verdadeiro(p_col, p_lin):
+    dict_col = {}
+    dict_lin = {}
+    clausulas6 = []
+    
+    for chave, itens in p_col.items():
+        for tupla in itens:
+            item2 = tupla[1]
+            if not chave in dict_col:
+                dict_col[chave] = []
+            dict_col[chave].append(item2)
+    for chave, itens in p_lin.items():
+        for tupla in itens:
+            item2 = tupla[1]
+            if not chave in dict_lin:
+                dict_lin[chave] = []
+            dict_lin[chave].append(item2)
+    for itens in dict_col.values():
+        clausulas6.append(itens)
+    for itens in dict_lin.values():
+        clausulas6.append(itens)
+    
+    return dict_col, dict_lin, clausulas6
+
+c, l, clau = regra_quadrado_verdadeiro(p_col, p_lin)
