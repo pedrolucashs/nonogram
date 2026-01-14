@@ -254,3 +254,39 @@ print("")
 for p, i in map_str_to_int.items():
     print(f"{p} - {i}")
 '''
+
+def regra_interconectividade(map_str_to_int):
+    dict_interc = {}
+    clausulas5 = []
+
+    for prop_str, prop_int in map_str_to_int.items():
+        if prop_str.startswith("C_"):
+            coluna, c, r, b, pos = prop_str.split("_")
+            chave = (str(coluna), int(c), int(pos))
+            if chave not in dict_interc:
+                dict_interc[chave] = []
+            grid = f"G_{c}_{pos}"
+            if grid in map_str_to_int:
+                grid_int = map_str_to_int[grid]
+                dict_interc[chave] = [prop_int, grid_int]
+                clausulas5.append([-prop_int, grid_int])
+        if prop_str.startswith("L_"):
+            linha, l, r, b, pos = prop_str.split("_")
+            chave = (str(linha), int(l), int(pos))
+            if chave not in dict_interc:
+                dict_interc[chave] = []
+            grid = f"G_{l}_{pos}"
+            if grid in map_str_to_int:
+                grid_int = map_str_to_int[grid]
+                dict_interc[chave] = [prop_int, grid_int]
+                clausulas5.append([-prop_int, grid_int])
+
+    return dict_interc, clausulas5
+
+#Teste
+'''
+d, cl = regra_interconectividade(map_str_to_int)
+print(d)
+print("")
+print("Clásulas: ", cl)
+'''
