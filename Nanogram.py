@@ -276,3 +276,32 @@ def regra_quadrado_verdadeiro(p_col, p_lin):
     return dict_col, dict_lin, clausulas6
 
 c, l, clau = regra_quadrado_verdadeiro(p_col, p_lin)
+
+def regra_interconectividade_dois(map_str_to_int):
+    clausulas6 = []
+    cobertura = {}
+
+    for prop_str, prop_int in map_str_to_int.items():
+        if prop_str.startswith("C_"):
+            parts = prop_str.split("_")
+            c, r, b, pos = parts[1], parts[2], parts[3], parts[4]
+            grid_nome = f"G_{pos}_{c}"
+            if grid_nome not in cobertura:
+                cobertura[grid_nome] = []
+            cobertura[grid_nome].append(prop_int)
+
+        elif prop_str.startswith("L_"):
+            parts = prop_str.split("_")
+            l, r, b, pos = parts[1], parts[2], parts[3], parts[4]
+            grid_nome = f"G_{l}_{pos}"
+            if grid_nome not in cobertura:
+                cobertura[grid_nome] = []
+            cobertura[grid_nome].append(prop_int)
+
+    for grid_nome, lista_blocos in cobertura.items():
+        if grid_nome in map_str_to_int:
+            grid_int = map_str_to_int[grid_nome]
+            clausula = [-grid_int] + lista_blocos
+            clausulas6.append(clausula)
+
+    return clausulas6
