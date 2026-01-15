@@ -251,31 +251,29 @@ for c in clausulas + clausulas_ordem:
 
 #print(clausulas_ordem)
 
-def regra_quadrado_verdadeiro(p_col, p_lin):
-    dict_col = {}
-    dict_lin = {}
-    clausulas6 = []
-    
-    for chave, itens in p_col.items():
-        for tupla in itens:
-            item2 = tupla[1]
-            if not chave in dict_col:
-                dict_col[chave] = []
-            dict_col[chave].append(item2)
-    for chave, itens in p_lin.items():
-        for tupla in itens:
-            item2 = tupla[1]
-            if not chave in dict_lin:
-                dict_lin[chave] = []
-            dict_lin[chave].append(item2)
-    for itens in dict_col.values():
-        clausulas6.append(itens)
-    for itens in dict_lin.values():
-        clausulas6.append(itens)
-    
-    return dict_col, dict_lin, clausulas6
+def regra_interconectividade(map_str_to_int):
+    clausulas5 = []
 
-c, l, clau = regra_quadrado_verdadeiro(p_col, p_lin)
+    for prop_str, prop_int in map_str_to_int.items():
+        if prop_str.startswith("C_"):
+            coluna, c, r, b, pos = prop_str.split("_")
+            grid = f"G_{c}_{pos}"
+            if grid in map_str_to_int:
+                grid_int = map_str_to_int[grid]
+                clausulas5.append([-prop_int, grid_int])
+        if prop_str.startswith("L_"):
+            linha, l, r, b, pos = prop_str.split("_")
+            grid = f"G_{l}_{pos}"
+            if grid in map_str_to_int:
+                grid_int = map_str_to_int[grid]
+                clausulas5.append([-prop_int, grid_int])
+
+    return clausulas5
+
+clausulas5 = regra_interconectividade(map_str_to_int)
+for c in clausulas5:
+    s.add_clause(c)
+
 
 def regra_interconectividade_dois(map_str_to_int):
     clausulas6 = []
@@ -305,3 +303,35 @@ def regra_interconectividade_dois(map_str_to_int):
             clausulas6.append(clausula)
 
     return clausulas6
+
+clausulas6 = regra_interconectividade_dois(map_str_to_int)
+for c in clausulas6:
+    s.add_clause(c)
+
+#print(clausulas6)
+
+def regra_quadrado_verdadeiro(p_col, p_lin):
+    dict_col = {}
+    dict_lin = {}
+    clausulas6 = []
+    
+    for chave, itens in p_col.items():
+        for tupla in itens:
+            item2 = tupla[1]
+            if not chave in dict_col:
+                dict_col[chave] = []
+            dict_col[chave].append(item2)
+    for chave, itens in p_lin.items():
+        for tupla in itens:
+            item2 = tupla[1]
+            if not chave in dict_lin:
+                dict_lin[chave] = []
+            dict_lin[chave].append(item2)
+    for itens in dict_col.values():
+        clausulas6.append(itens)
+    for itens in dict_lin.values():
+        clausulas6.append(itens)
+    
+    return dict_col, dict_lin, clausulas6
+
+c, l, clau = regra_quadrado_verdadeiro(p_col, p_lin)
