@@ -200,47 +200,35 @@ p_col, p_lin, p_c_s, p_l_s, c = regra_continuidade(map_str_to_int, SETTINGS)
 def regra_ordem_e_espacamento(map_str_to_int, quant_linhas, quant_colunas, regras_linhas, regras_colunas):
     clausulas_ordem = []
 
-    # BLOCO 1: TRATANDO AS LINHAS (Conforme o monitor explicou)
     for l in range(1, quant_linhas + 1):
         num_blocos = len(regras_linhas[l])
-        # Precisamos de pelo menos 2 blocos para ter uma ordem entre eles
         for r in range(1, num_blocos):
-            tam_bloco_atual = regras_linhas[l][r-1]
-            
-            # FOR 1: Vê onde o bloco ATUAL (r) termina
+            tamanho_atual = regras_linhas[l][r-1]
             for p1 in range(1, quant_colunas + 1):
-                # Pegamos o ID do último quadradinho (b = tamanho do bloco) do bloco r
-                var_fim_bloco_r = map_str_to_int.get(f"L_{l}_{r}_{tam_bloco_atual}_{p1}")
-                
-                if var_fim_bloco_r:
-                    # FOR 2: Vê onde o PRÓXIMO bloco (r+1) começa
+                bloco_atual = f"L_{l}_{r}_{tamanho_atual}_{p1}"
+                if bloco_atual in map_str_to_int:
+                    id_atual = map_str_to_int[bloco_atual]
                     for p2 in range(1, quant_colunas + 1):
-                        # Se a posição de início do próximo (p2) for menor ou igual 
-                        # à posição de fim do atual (p1) + 1, gera conflito.
-                        # O "+ 1" é o espaço em branco obrigatório do Nanograma.
                         if p2 <= p1 + 1:
-                            # Pegamos o ID do primeiro quadradinho (b=1) do bloco r+1
-                            var_ini_bloco_prox = map_str_to_int.get(f"L_{l}_{r+1}_1_{p2}")
-                            
-                            if var_ini_bloco_prox:
-                                # Se os dois forem verdadeiros ao mesmo tempo, quebra a regra
-                                clausulas_ordem.append([-var_fim_bloco_r, -var_ini_bloco_prox])
+                            bloco_proximo = f"L_{l}_{r+1}_1_{p2}"
+                            if bloco_proximo in map_str_to_int:
+                                id_proximo = map_str_to_int[bloco_proximo]
+                                clausulas_ordem.append([-id_atual, -id_proximo])
 
-    # BLOCO 2: TRATANDO AS COLUNAS (Repete a mesma lógica do monitor)
     for c in range(1, quant_colunas + 1):
         num_blocos = len(regras_colunas[c])
         for r in range(1, num_blocos):
-            tam_bloco_atual = regras_colunas[c][r-1]
-            
+            tamanho_atual = regras_colunas[c][r-1]
             for p1 in range(1, quant_linhas + 1):
-                var_fim_bloco_r = map_str_to_int.get(f"C_{c}_{r}_{tam_bloco_atual}_{p1}")
-                
-                if var_fim_bloco_r:
+                bloco_atual = f"C_{c}_{r}_{tamanho_atual}_{p1}"
+                if bloco_atual in map_str_to_int:
+                    id_atual = map_str_to_int[bloco_atual]
                     for p2 in range(1, quant_linhas + 1):
                         if p2 <= p1 + 1:
-                            var_ini_bloco_prox = map_str_to_int.get(f"C_{c}_{r+1}_1_{p2}")
-                            if var_ini_bloco_prox:
-                                clausulas_ordem.append([-var_fim_bloco_r, -var_ini_bloco_prox])
+                            bloco_proximo = f"C_{c}_{r+1}_1_{p2}"
+                            if bloco_proximo in map_str_to_int:
+                                id_proximo = map_str_to_int[bloco_proximo]
+                                clausulas_ordem.append([-id_atual, -id_proximo])
 
     return clausulas_ordem
 
@@ -249,7 +237,7 @@ s = Glucose3()
 for c in clausulas + clausulas_ordem:
     s.add_clause(c)
 
-#print(clausulas_ordem)
+print(clausulas_ordem)
 
 def regra_interconectividade(map_str_to_int):
     clausulas5 = []
