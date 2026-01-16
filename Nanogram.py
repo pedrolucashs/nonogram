@@ -237,7 +237,7 @@ s = Glucose3()
 for c in clausulas + clausulas_ordem:
     s.add_clause(c)
 
-print(clausulas_ordem)
+#print(clausulas_ordem)
 
 def regra_interconectividade(map_str_to_int):
     clausulas5 = []
