@@ -1,128 +1,259 @@
+import sys
 from pysat.solvers import Glucose3
 from SETTINGS import SETTINGS
 from itertools import combinations
 
-#Não é uma regra de resolução do Nanogram, é uma função que gera as regras das linhas, colunas e o grid
-def gerar_proposicoes(SETTINGS):
-    regras_colunas = SETTINGS["example"]["rules"]["columns"]
-    regras_linhas = SETTINGS["example"]["rules"]["rows"]
-    quant_colunas = SETTINGS["example"]["size"]["column"]
-    quant_linhas = SETTINGS["example"]["size"]["row"]
-    quant_regras_linhas = {linha: len(regras) for linha, regras in regras_linhas.items()}
-    quant_regras_colunas = {coluna: len(regras) for coluna, regras in regras_colunas.items()}
-    prop_linhas = []
-    prop_colunas = []
-    prop_grid = []
+class Nanogram:
+    def __init__(self, name):
+        aux = SETTINGS[name]
+        self.name = aux
+        self.quant_linhas = aux["size"]["row"]
+        self.quant_colunas = aux["size"]["column"]
+        self.regras_linhas = aux["rules"]["rows"]
+        self.regras_colunas = aux["rules"]["columns"]
+        
+    def gerar_proposicoes(self):
+        regras_colunas = self.regras_colunas
+        regras_linhas = self.regras_linhas
+        quant_colunas = self.quant_colunas
+        quant_linhas = self.quant_linhas
+        
+        prop_linhas = []
+        prop_colunas = []
+        prop_grid = []
 
-    #Proposições das regras das colunas
-    for c in range(1, quant_colunas + 1):
-        for r in range(1, quant_regras_colunas[c]+1):
-            tam_bloco = regras_colunas[c][r-1]
-            for b in range(1, tam_bloco+1):
-                for p in range(1, quant_colunas + 1):
-                    prop_colunas.append(f"C_{c}_{r}_{b}_{p}")
+        for c in range(1, quant_colunas + 1):
+            for r, tam_bloco in enumerate(regras_colunas[c], 1):
+                for b in range(1, tam_bloco + 1):
+                    for p in range(1, quant_linhas + 1):
+                        prop_colunas.append(f"C_{c}_{r}_{b}_{p}")
 
-    #Proposições das regras das linhas
-    for l in range(1, quant_linhas + 1):
-        for r in range(1, quant_regras_linhas[l]+1):
-            tam_bloco = regras_linhas[l][r-1]
-            for b in range(1, tam_bloco+1):
-                for p in range(1, quant_linhas + 1):
-                    prop_linhas.append(f"L_{l}_{r}_{b}_{p}")
+        for l in range(1, quant_linhas + 1):
+            for r, tam_bloco in enumerate(regras_linhas[l], 1):
+                for b in range(1, tam_bloco + 1):
+                    for p in range(1, quant_colunas + 1):
+                        prop_linhas.append(f"L_{l}_{r}_{b}_{p}")
+        
+        for l in range(1, quant_linhas + 1):
+            for c in range(1, quant_colunas + 1):
+                prop_grid.append(f"G_{l}_{c}")
+
+        self.prop_linhas = prop_linhas
+        self.prop_colunas = prop_colunas
+        self.prop_grid = prop_grid
+
+
+    def create_mapping(self):
+        prop_linhas = self.prop_linhas
+        prop_colunas = self.prop_colunas
+        prop_grid = self.prop_grid
+        mapping_to_str = {}
+        mapping_to_int = {}
+        cont = 1
+        
+        for p in prop_grid:
+            mapping_to_str[p] = cont
+            mapping_to_int[cont] = p
+            cont += 1
+        for p in prop_colunas:
+            mapping_to_str[p] = cont
+            mapping_to_int[cont] = p
+            cont += 1
+        for p in prop_linhas:
+            mapping_to_str[p] = cont
+            mapping_to_int[cont] = p
+            cont += 1
+
+        self.map_str_to_int = mapping_to_str
+        self.map_int_to_str = mapping_to_int
+
+    def regra_unicidade(self):
+        map_str_to_int = self.map_str_to_int
+        clausulas_unicidade = []
+        grupos = {}
+
+        for prop_str, prop_int in map_str_to_int.items():
+            if prop_str.startswith(("C_")):
+                C, c, r, b, p = prop_str.split("_")
+                chave = (str(C), int(c), int(r), int(b))
+                if chave not in grupos: 
+                    grupos[chave] = []
+                grupos[chave].append(prop_int)
+            if prop_str.startswith(("L_")):
+                L, l, r, b, p = prop_str.split("_")
+                chave = (str(L), int(l), int(r), int(b))
+                if chave not in grupos: 
+                    grupos[chave] = []
+                grupos[chave].append(prop_int)
+
+        for lista in grupos.values():
+            clausulas_unicidade.append(lista) 
+            for c1, c2 in combinations(lista, 2):
+                clausulas_unicidade.append([-c1, -c2]) 
+        self.clausulas_unicidade = clausulas_unicidade
+
+    def regra_continuidade(self):
+        map_str_to_int = self.map_str_to_int
+        regras_colunas = self.regras_colunas
+        regras_linhas = self.regras_linhas
+        clausulas_continuidade = []
+
+        for l in range(1, len(regras_linhas) + 1):
+            for r, tam in enumerate(regras_linhas[l], 1):
+                for b in range(1, tam):
+                    for p in range(1, len(regras_colunas) + 1):
+                        x = map_str_to_int.get(f"L_{l}_{r}_{b}_{p}")
+                        y = map_str_to_int.get(f"L_{l}_{r}_{b+1}_{p+1}")
+                        if x:
+                            if y: 
+                                clausulas_continuidade.append([-x, y])
+                            else: 
+                                clausulas_continuidade.append([-x])
+        
+        for c in range(1, len(regras_colunas) + 1):
+            for r, tam in enumerate(regras_colunas[c], 1):
+                for b in range(1, tam):
+                    for p in range(1, len(regras_linhas) + 1):
+                        x = map_str_to_int.get(f"C_{c}_{r}_{b}_{p}")
+                        y = map_str_to_int.get(f"C_{c}_{r}_{b+1}_{p+1}")
+                        if x:
+                            if y: 
+                                clausulas_continuidade.append([-x, y])
+                            else: 
+                                clausulas_continuidade.append([-x])
+
+        self.clausulas_continuidade = clausulas_continuidade
+
+    def regra_ordem_e_espacamento(self):
+        map_str_to_int = self.map_str_to_int
+        regras_colunas = self.regras_colunas
+        regras_linhas = self.regras_linhas
+        quant_colunas = self.quant_colunas
+        quant_linhas = self.quant_linhas
+        clausulas_ordem = []
+        
+        for l in range(1, quant_linhas + 1):
+            for r in range(1, len(regras_linhas[l])):
+                tam = regras_linhas[l][r-1]
+                for pos_1 in range(1, quant_colunas + 1):
+                    x = map_str_to_int.get(f"L_{l}_{r}_{tam}_{pos_1}")
+                    for pos_2 in range(1, quant_colunas + 1):
+                        if pos_2 <= pos_1 + 1:
+                            y = map_str_to_int.get(f"L_{l}_{r+1}_1_{pos_2}")
+                            if x and y: 
+                                clausulas_ordem.append([-x, -y])
+        
+        for c in range(1, quant_colunas + 1):
+            for r in range(1, len(regras_colunas[c])):
+                tam = regras_colunas[c][r-1]
+                for pos_1 in range(1, quant_linhas + 1):
+                    x = map_str_to_int.get(f"C_{c}_{r}_{tam}_{pos_1}")
+                    for pos_2 in range(1, quant_linhas + 1):
+                        if pos_2 <= pos_1 + 1:
+                            y = map_str_to_int.get(f"C_{c}_{r+1}_1_{pos_2}")
+                            if x and y: 
+                                clausulas_ordem.append([-x, -y])
+
+        self.clausulas_ordem = clausulas_ordem
+
+
+    def regra_interconectividade(self):
+        map_str_to_int = self.map_str_to_int
+        regras_colunas = self.regras_colunas
+        regras_linhas = self.regras_linhas
+        quant_colunas = self.quant_colunas
+        quant_linhas = self.quant_linhas
+        clausulas_interconectividade = []
+        for l in range(1, quant_linhas + 1):
+            for c in range(1, quant_colunas + 1):
+                grid_int = map_str_to_int[f"G_{l}_{c}"]
+                prop_linhas = []
+                for r, tam in enumerate(regras_linhas[l], 1):
+                    for b in range(1, tam + 1):
+                        prop_linhas.append(map_str_to_int[f"L_{l}_{r}_{b}_{c}"])
+                prop_colunas = []
+                for r, tam in enumerate(regras_colunas[c], 1):
+                    for b in range(1, tam + 1):
+                        prop_colunas.append(map_str_to_int[f"C_{c}_{r}_{b}_{l}"])
+                for p in prop_linhas + prop_colunas:
+                    clausulas_interconectividade.append([-p, grid_int])
+                clausulas_interconectividade.append([-grid_int] + prop_linhas)
+                clausulas_interconectividade.append([-grid_int] + prop_colunas)
+                
+        self.clausulas_interconectividade = clausulas_interconectividade
+
+def main():
+    if len(sys.argv) < 2:
+        print("Digite: py Nanogram.py (nome do Nanogram)")
+        return
     
-    #Proposições do Grid
-    for l in range(1, quant_linhas+1):
-        for c in range(1, quant_colunas+1):
-            prop_grid.append(f"G_{l}_{c}")
+    nome = sys.argv[1]
+    
+    if nome not in SETTINGS:
+        print(f"O nanogram {nome} não existe")
+        return
 
-    return prop_linhas, prop_colunas, prop_grid
+    try:
+        nanogram = Nanogram(nome)
+    except ValueError as e:
+        print(e)
+        return
 
+    nanogram.gerar_proposicoes()
+    nanogram.create_mapping()
+    nanogram.regra_unicidade()
+    nanogram.regra_continuidade()
+    nanogram.regra_interconectividade()
+    nanogram.regra_ordem_e_espacamento()
 
-proposicoes_linhas, proposicoes_colunas, proposicoes_grid = gerar_proposicoes(SETTINGS)
+    g = Glucose3()
 
-"""
-#Teste
-print("Proposições linhas: ", proposicoes_linhas)
-print("Proposições colunas: ", proposicoes_colunas)
-print("Proposições grid: ", proposicoes_grid)
-"""
+    for clausula in nanogram.clausulas_unicidade:
+        g.add_clause(clausula)
+    for clausula in nanogram.clausulas_continuidade:
+        g.add_clause(clausula)
+    for clausula in nanogram.clausulas_interconectividade:
+        g.add_clause(clausula)
+    for clausula in nanogram.clausulas_ordem:
+        g.add_clause(clausula)
 
-def create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid):
-    mapping_to_str = {}
-    mapping_to_int = {}
-    cont = 1
-   
-    for p in proposicoes_grid:
-        mapping_to_str[p] = cont
-        mapping_to_int[cont] = p
-        cont += 1
-    for p in proposicoes_colunas:
-        mapping_to_str[p] = cont
-        mapping_to_int[cont] = p
-        cont += 1
-    for p in proposicoes_linhas:
-        mapping_to_str[p] = cont
-        mapping_to_int[cont] = p
-        cont += 1
-    return mapping_to_str, mapping_to_int
+    if not g.solve():
+        print("O nanogram não possui solução")
+        return
 
-map_str_to_int, map_int_to_str = create_mapping(proposicoes_linhas, proposicoes_colunas, proposicoes_grid)
+    modelo = g.get_model()
+    quadrados_pintados = []
 
-def regra_unicidade(map_str_to_int):
-    prop_colunas = {}
-    prop_colunas_str = {}
-    prop_linhas = {}
-    prop_linhas_str = {}
-    clausulas = []
+    for prop in modelo:
+        if prop > 0:
+            prop_str = nanogram.map_int_to_str.get(prop)
+            if prop_str and prop_str.startswith("G_"):
+                g, coluna, linha = prop_str.split("_")
+                quadrados_pintados.append((int(coluna), int(linha)))
 
-    for prop_str, prop_int in map_str_to_int.items():
-        if prop_str.startswith("C_"):
-            coluna, c, r, b, pos = prop_str.split("_")
-            chave = (int(c), int(r), int(b))
-            if chave not in prop_colunas:
-                prop_colunas[chave] = []
-                prop_colunas_str[chave] = []
-            prop_colunas[chave].append(prop_int)
-            prop_colunas_str[chave].append(prop_str)
-        elif prop_str.startswith("L_"):
-            linha, l, r, b, pos = prop_str.split("_")
-            chave = (int(l), int(r), int(b))
-            if chave not in prop_linhas:
-                prop_linhas[chave] = []
-                prop_linhas_str[chave] = []
-            prop_linhas[chave].append(prop_int)
-            prop_linhas_str[chave].append(prop_str)
-    for lista_posicoes in prop_colunas.values():
-        for c1, c2 in combinations(lista_posicoes, 2):
-            clausulas.append([-c1, -c2])
-    for lista_posicoes in prop_linhas.values():
-        for c1, c2 in combinations(lista_posicoes, 2):
-            clausulas.append([-c1, -c2])
-    return clausulas, prop_colunas, prop_linhas, prop_colunas_str, prop_linhas_str
+    quant_linhas = nanogram.quant_linhas
+    quant_colunas = nanogram.quant_colunas
+    matriz_nanogram = []
 
-clausulas, prop_colunas, prop_linhas, p_col_str, p_lin_str  = regra_unicidade(map_str_to_int)
+    for l in range(quant_linhas):
+        linha = []
+        for c in range(quant_colunas):
+            linha.append(False)
+        matriz_nanogram.append(linha)
 
-#Adiciona as cláusulas no solver, quando for adicionar as demais cláusulas das outras regras, uso a variável 's'
-s = Glucose3()
-for c in clausulas:
-    s.add_clause(c)
+    for l, c in quadrados_pintados:
+        if 1 <= l <= quant_linhas and 1 <= c <= quant_colunas:
+            matriz_nanogram[l-1][c-1] = True
 
-""""
-#Teste
-for m, i in map_str_to_int.items():
-    print(f"Mapping str {m} to int {i}")
-print("")
-print("Regras por bloco das colunas: ", prop_colunas)
-print("")
-print("Regras por blocos dad linhas: ", prop_linhas)
-print("")
-print("Claúsulas: ", clausulas)
-print("")
-print("Regras str do bloco da coluna: ", p_col_str)
-print("")
-print("Regras str do bloco da linha: ", p_lin_str)
-"""
+    for l in range(quant_linhas):
+        for c in range(quant_colunas):
+            if matriz_nanogram[l][c]:
+                print("██", end="")
+            else:
+                print("  ", end="")
+        print()
 
+<<<<<<< HEAD
 def regra_continuidade(map_str_to_int, SETTINGS):
     regras_colunas = SETTINGS["example"]["rules"]["columns"]
     regras_linhas = SETTINGS["example"]["rules"]["rows"]
@@ -323,3 +454,7 @@ def regra_quadrado_verdadeiro(p_col, p_lin):
     return dict_col, dict_lin, clausulas6
 
 c, l, clau = regra_quadrado_verdadeiro(p_col, p_lin)
+=======
+if __name__ == "__main__":
+    main()
+>>>>>>> origin/taina-branch
