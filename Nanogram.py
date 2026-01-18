@@ -253,7 +253,6 @@ def main():
                 print("  ", end="")
         print()
 
-<<<<<<< HEAD
 def regra_continuidade(map_str_to_int, SETTINGS):
     regras_colunas = SETTINGS["example"]["rules"]["columns"]
     regras_linhas = SETTINGS["example"]["rules"]["rows"]
@@ -454,7 +453,5 @@ def regra_quadrado_verdadeiro(p_col, p_lin):
     return dict_col, dict_lin, clausulas6
 
 c, l, clau = regra_quadrado_verdadeiro(p_col, p_lin)
-=======
 if __name__ == "__main__":
     main()
->>>>>>> origin/taina-branch
