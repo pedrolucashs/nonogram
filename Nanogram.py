@@ -42,7 +42,6 @@ class Nanogram:
         self.prop_colunas = prop_colunas
         self.prop_grid = prop_grid
 
-
     def create_mapping(self):
         prop_linhas = self.prop_linhas
         prop_colunas = self.prop_colunas
@@ -97,18 +96,17 @@ class Nanogram:
         regras_colunas = self.regras_colunas
         regras_linhas = self.regras_linhas
         clausulas_continuidade = []
-
+    
         for l in range(1, len(regras_linhas) + 1):
             for r, tam in enumerate(regras_linhas[l], 1):
                 for b in range(1, tam):
                     for p in range(1, len(regras_colunas) + 1):
                         bloco_atual = map_str_to_int.get(f"L_{l}_{r}_{b}_{p}")
                         bloco_prox = map_str_to_int.get(f"L_{l}_{r}_{b+1}_{p+1}")
-                        if bloco_atual:
-                            if bloco_prox: 
+                        if bloco_atual and bloco_prox:
                                 clausulas_continuidade.append([-bloco_atual, bloco_prox])
-                            else: 
-                                clausulas_continuidade.append([-bloco_atual])
+                        else: 
+                            clausulas_continuidade.append([-bloco_atual])
         
         for c in range(1, len(regras_colunas) + 1):
             for r, tam in enumerate(regras_colunas[c], 1):
@@ -116,11 +114,10 @@ class Nanogram:
                     for p in range(1, len(regras_linhas) + 1):
                         bloco_atual = map_str_to_int.get(f"C_{c}_{r}_{b}_{p}")
                         bloco_prox = map_str_to_int.get(f"C_{c}_{r}_{b+1}_{p+1}")
-                        if bloco_atual:
-                            if bloco_prox: 
+                        if bloco_atual and bloco_prox:
                                 clausulas_continuidade.append([-bloco_atual, bloco_prox])
-                            else: 
-                                clausulas_continuidade.append([-bloco_atual])
+                        else: 
+                            clausulas_continuidade.append([-bloco_atual])
 
         self.clausulas_continuidade = clausulas_continuidade
 
@@ -157,7 +154,6 @@ class Nanogram:
                                 clausulas_ordem.append([-bloco_atual, -bloco_prox])
 
         self.clausulas_ordem = clausulas_ordem
-
 
     def regra_interconectividade(self):
         map_str_to_int = self.map_str_to_int
@@ -221,7 +217,7 @@ def main():
         g.add_clause(clausula)
 
     if not g.solve():
-        print("O nanogram não possui solução.")
+        print("O Nanogram não possui solução.")
         return
 
     modelo = g.get_model()
