@@ -102,25 +102,25 @@ class Nanogram:
             for r, tam in enumerate(regras_linhas[l], 1):
                 for b in range(1, tam):
                     for p in range(1, len(regras_colunas) + 1):
-                        x = map_str_to_int.get(f"L_{l}_{r}_{b}_{p}")
-                        y = map_str_to_int.get(f"L_{l}_{r}_{b+1}_{p+1}")
-                        if x:
-                            if y: 
-                                clausulas_continuidade.append([-x, y])
+                        bloco_atual = map_str_to_int.get(f"L_{l}_{r}_{b}_{p}")
+                        bloco_prox = map_str_to_int.get(f"L_{l}_{r}_{b+1}_{p+1}")
+                        if bloco_atual:
+                            if bloco_prox: 
+                                clausulas_continuidade.append([-bloco_atual, bloco_prox])
                             else: 
-                                clausulas_continuidade.append([-x])
+                                clausulas_continuidade.append([-bloco_atual])
         
         for c in range(1, len(regras_colunas) + 1):
             for r, tam in enumerate(regras_colunas[c], 1):
                 for b in range(1, tam):
                     for p in range(1, len(regras_linhas) + 1):
-                        x = map_str_to_int.get(f"C_{c}_{r}_{b}_{p}")
-                        y = map_str_to_int.get(f"C_{c}_{r}_{b+1}_{p+1}")
-                        if x:
-                            if y: 
-                                clausulas_continuidade.append([-x, y])
+                        bloco_atual = map_str_to_int.get(f"C_{c}_{r}_{b}_{p}")
+                        bloco_prox = map_str_to_int.get(f"C_{c}_{r}_{b+1}_{p+1}")
+                        if bloco_atual:
+                            if bloco_prox: 
+                                clausulas_continuidade.append([-bloco_atual, bloco_prox])
                             else: 
-                                clausulas_continuidade.append([-x])
+                                clausulas_continuidade.append([-bloco_atual])
 
         self.clausulas_continuidade = clausulas_continuidade
 
@@ -133,26 +133,28 @@ class Nanogram:
         clausulas_ordem = []
         
         for l in range(1, quant_linhas + 1):
-            for r in range(1, len(regras_linhas[l])):
-                tam = regras_linhas[l][r-1]
+            num_blocos = len(regras_linhas[l])
+            for r in range(1, num_blocos):
+                tam_atual = regras_linhas[l][r-1]
                 for pos_1 in range(1, quant_colunas + 1):
-                    x = map_str_to_int.get(f"L_{l}_{r}_{tam}_{pos_1}")
+                    bloco_atual = map_str_to_int.get(f"L_{l}_{r}_{tam_atual }_{pos_1}")
                     for pos_2 in range(1, quant_colunas + 1):
                         if pos_2 <= pos_1 + 1:
-                            y = map_str_to_int.get(f"L_{l}_{r+1}_1_{pos_2}")
-                            if x and y: 
-                                clausulas_ordem.append([-x, -y])
+                            bloco_prox = map_str_to_int.get(f"L_{l}_{r+1}_1_{pos_2}")
+                            if bloco_atual and bloco_prox: 
+                                clausulas_ordem.append([-bloco_atual, -bloco_prox])
         
         for c in range(1, quant_colunas + 1):
-            for r in range(1, len(regras_colunas[c])):
-                tam = regras_colunas[c][r-1]
+            num_blocos = len(regras_colunas[c])
+            for r in range(1, num_blocos):
+                tam_atual = regras_colunas[c][r-1]
                 for pos_1 in range(1, quant_linhas + 1):
-                    x = map_str_to_int.get(f"C_{c}_{r}_{tam}_{pos_1}")
+                    bloco_atual = map_str_to_int.get(f"C_{c}_{r}_{tam_atual}_{pos_1}")
                     for pos_2 in range(1, quant_linhas + 1):
                         if pos_2 <= pos_1 + 1:
-                            y = map_str_to_int.get(f"C_{c}_{r+1}_1_{pos_2}")
-                            if x and y: 
-                                clausulas_ordem.append([-x, -y])
+                            bloco_prox = map_str_to_int.get(f"C_{c}_{r+1}_1_{pos_2}")
+                            if bloco_atual and bloco_prox: 
+                                clausulas_ordem.append([-bloco_atual, -bloco_prox])
 
         self.clausulas_ordem = clausulas_ordem
 
@@ -164,6 +166,7 @@ class Nanogram:
         quant_colunas = self.quant_colunas
         quant_linhas = self.quant_linhas
         clausulas_interconectividade = []
+
         for l in range(1, quant_linhas + 1):
             for c in range(1, quant_colunas + 1):
                 grid_int = map_str_to_int[f"G_{l}_{c}"]
@@ -175,8 +178,8 @@ class Nanogram:
                 for r, tam in enumerate(regras_colunas[c], 1):
                     for b in range(1, tam + 1):
                         prop_colunas.append(map_str_to_int[f"C_{c}_{r}_{b}_{l}"])
-                for p in prop_linhas + prop_colunas:
-                    clausulas_interconectividade.append([-p, grid_int])
+                for prop_int in prop_linhas + prop_colunas:
+                    clausulas_interconectividade.append([-prop_int, grid_int])
                 clausulas_interconectividade.append([-grid_int] + prop_linhas)
                 clausulas_interconectividade.append([-grid_int] + prop_colunas)
                 
@@ -184,13 +187,13 @@ class Nanogram:
 
 def main():
     if len(sys.argv) < 2:
-        print("Digite: py Nanogram.py (nome do Nanogram)")
+        print("Digite o nome do Nanogram no terminal para imprimir a imagem.")
         return
     
     nome = sys.argv[1]
     
     if nome not in SETTINGS:
-        print(f"O nanogram {nome} não existe")
+        print(f"O nanogram {nome} não existe.")
         return
 
     try:
@@ -218,7 +221,7 @@ def main():
         g.add_clause(clausula)
 
     if not g.solve():
-        print("O nanogram não possui solução")
+        print("O nanogram não possui solução.")
         return
 
     modelo = g.get_model()
