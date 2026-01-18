@@ -199,7 +199,6 @@ def main():
         print(e)
         return
 
-    # gera proposições e regras
     nanogram.gerar_proposicoes()
     nanogram.create_mapping()
     nanogram.regra_unicidade()
@@ -207,7 +206,6 @@ def main():
     nanogram.regra_interconectividade()
     nanogram.regra_ordem_e_espacamento()
 
-    # solver SAT
     g = Glucose3()
 
     for clausula in nanogram.clausulas_unicidade:
@@ -219,7 +217,6 @@ def main():
     for clausula in nanogram.clausulas_ordem:
         g.add_clause(clausula)
 
-    # resolve
     if not g.solve():
         print("O nanogram não possui solução")
         return
